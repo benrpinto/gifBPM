@@ -1,6 +1,5 @@
 import os
-import tty
-import termios
+import sys
 import sqlite3
 import subprocess
 import thread
@@ -9,9 +8,11 @@ import urlparse
 from StringIO import StringIO
 from time import time
 from PIL import Image
-from sys import stdin
 
-def getchar():
+def getChar():
+   from sys import stdin
+   import tty
+   import termios
    fd = stdin.fileno()
    old_settings = termios.tcgetattr(fd)
    try:
@@ -36,6 +37,7 @@ def processImage(path, connection, cursor):
       fPath = os.path.dirname(path)
       if(fName == path):
          fPath = os.getcwd()
+      isURL = False
    except IOError as err:
       try:
          response = requests.get(path)
@@ -43,6 +45,7 @@ def processImage(path, connection, cursor):
          (myScheme, myNetloc, myPath, myParams, myQuery, myFrag) = urlparse.urlparse(path)
          fName = os.path.basename(myPath)
          fPath = myScheme+ "://" + myNetloc + os.path.dirname(myPath)
+         isURL = True
       except IOError as err:
          print("error opening file")
          return
@@ -51,39 +54,42 @@ def processImage(path, connection, cursor):
    gifLen = 0
    try:
       while True:
-         #im.show()
          try:
             frameLen = im.info['duration']
          except KeyError:
             frameLen = 0
          gifLen += frameLen
-         #print "frame %d is length %d. total length is %d" % (count, frameLen, gifLen)
          count += 1
          im.seek(im.tell()+1)
    except EOFError:
-
-#      print("total gif length is %d." % (gifLen))
       gifBPM = float(60000)/gifLen
-#      print("would suit a bpm of %.2f." % (gifBPM))
       print("----")
       print(fPath)
       print(fName)
       print(gifLen)
       print(gifBPM)
+      print(isURL)
       print("----")
-      toInsert = (fPath, fName, gifLen, gifBPM)
-      cursor.execute('INSERT INTO images (fPath, fName, gifLen, bpm) VALUES(?,?,?,?)', toInsert)
+      toInsert = (fPath, fName, gifLen, gifBPM,isURL)
+      cursor.execute('INSERT INTO images (fPath, fName, gifLen, bpm, isURL) VALUES(?,?,?,?,?)', toInsert)
       connection.commit()
 
 def showDB(connection, cursor):
+   isWin = (sys.platform == "win32")
    connection.commit()
-   cursor.execute("SELECT * FROM images")
+   cursor.execute("SELECT image_ID, fPath, fName, gifLen, bpm, isURL FROM images")
    print("Database Contents")
    result = cursor.fetchall()
-   for r in result:
-      print(r)
+   for (image_ID, fPath, fName, gifLen, bpm, isURL) in result:
+      if(isWin and not isURL):
+         print("%d: %s\%s %d" % (image_ID, fPath, fName, gifLen))
+      else:
+         print("%d: %s/%s %d" % (image_ID, fPath, fName, gifLen))
 
 def getFreq(Connection, cursor):
+   isWin = (sys.platform == "win32")
+   if(isWin):
+      import msvcrt
    print("tap q to exit to main menu.")
    tapped = ' '
 
@@ -95,7 +101,11 @@ def getFreq(Connection, cursor):
 
    while(True):
       prevTime = curTime
-      tapped = getchar()
+      if(isWin):
+         tapped = msvcrt.getch()
+      else:
+         tapped = getChar()
+
       if tapped in ('q', 'Q'):
          break
       curTime = time()
@@ -109,25 +119,24 @@ def getFreq(Connection, cursor):
          print('BPM is %.2f' % (float(60)/gifGap))
          print('Gap is %.2f' % gifGap)
          try:
-#This SQL Query takes the lowest difference between the gif and the beat, but only returns values where the difference is less than 0.1 seconds
-#            cursor.execute('SELECT fPath, fName FROM images WHERE ABS(gifLen - ?) < 100 ORDER BY ABS(gifLen - ?);', (1000*gifGap,1000*gifGap))
-#This SQL Query takes the lowest difference between the gif and the beat, with the modulo (acknowledging gifs and beats repeating)
-#            cursor.execute('SELECT fPath, fName, gifLen FROM images ORDER BY (ABS(gifLen - ?)%((gifLen + ? - ABS(gifLen - ?))/2)), ABS(gifLen - ?);', (1000*gifGap,1000*gifGap,1000*gifGap,1000*gifGap))
-#This SQL Query takes the lowest difference between the gif and the beat, but penalises gifs by how proportionally smaller or larger they are than the beat
-#            argSQL = (1000*gifGap,1000*gifGap,1000*gifGap,1000*gifGap,1000*gifGap)
-#            cursor.execute('SELECT fPath, fName, gifLen FROM images ORDER BY (ABS(gifLen - ?)%((gifLen + ? - ABS(gifLen - ?))/2)) + (ABS(gifLen - ?)/gifLen), ABS(gifLen - ?);', argSQL)
-#This SQL Query takes the lowest difference between the gif and the beat, but excludes gifs that are too short
+#This SQL Query takes the lowest difference between the gif and the beat, but excludes gifs that are too short or long
             argSQL = (1000*gifGap,1000*gifGap,1000*gifGap,1000*gifGap,1000*gifGap,1000*gifGap)
-            cursor.execute('SELECT fPath, fName, gifLen FROM images WHERE gifLen < 8*? AND gifLen*8 > ? ORDER BY (ABS(gifLen - ?)%((gifLen + ? - ABS(gifLen - ?))/2)), ABS(gifLen - ?);', argSQL)
-            (r,a,b) = cursor.fetchone()
-            print("%s/%s %d" % (r,a,b))
-            thread.start_new_thread(showMeTheGif, (r + '/' + a,))
+            cursor.execute('SELECT fPath, fName, gifLen, isURL FROM images WHERE gifLen < 8*? AND gifLen*8 > ? ORDER BY (ABS(gifLen - ?)%((gifLen + ? - ABS(gifLen - ?))/2)), ABS(gifLen - ?);', argSQL)
+            (r,a,b,isURL) = cursor.fetchone()
+            if(isWin and not isURL):
+               print("%s\%s %d" % (r,a,b))
+               thread.start_new_thread(showMeTheGif, (r + '\\' + a,))
+            else:
+               print("%s/%s %d" % (r,a,b))
+               thread.start_new_thread(showMeTheGif, (r + '/' + a,))
          except TypeError:
             print("No suitable gifs in database")
-         
-# works in Linux, but probably not in windows
+
 def showMeTheGif(imagePath):
-   subprocess.call(["sensible-browser", "%s"%imagePath])
+   if(sys.platform == "win32"):
+      subprocess.call(["explorer.exe ", "%s"%imagePath])
+   else:
+      subprocess.call(["sensible-browser", "%s"%imagePath])
    
 
 def main():
@@ -139,7 +148,8 @@ def main():
    fPath VARCHAR(256),
    fName VARCHAR(256),
    gifLen INTEGER,
-   bpm REAL);"""
+   bpm REAL,
+   isURL BOOLEAN);"""
 
    cursor.execute(sqlCommand)
    connection.commit()
@@ -173,7 +183,8 @@ def main():
             fPath VARCHAR(256),
             fName VARCHAR(256),
             gifLen INTEGER,
-            bpm REAL);"""
+            bpm REAL,
+            isURL BOOLEAN);"""
             cursor.execute(sqlCommand)
             print("Database cleared.")
       else:
