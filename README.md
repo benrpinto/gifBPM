@@ -7,8 +7,17 @@ Wouldn't it be great if you could tap a beat, and have a computer tell you which
 That's what this program is for.
 Add gifs to a local database, and then tap a regular beat and the program will pull up a gif for you.
 
+OPTIONS:
+* G: Add a gif
+* A: Add multiple gifs (by specifying a file containing gif pathnames)
+* T: Tap a beat and get a gif
+* P: Print the database
+* Q: Quit the program
+* D: Delete the entire contents of the database
+
 IMPLEMENTED.
 - [X] calculating the length and tempo of a gif on your computer
+- [X] calculating the length and tempo of multiple gifs from a file containing pathnames
 - [X] calculating the length and tempo of a gif from a url
 - [X] storing the filepath, filename, length, and tempo of a gif in a local database
 - [X] calculating the tempo of a user's keyboard taps
@@ -19,4 +28,5 @@ IMPLEMENTED.
 
 TO BE IMPLEMENTED.
 - [ ] Closing the displayed gif when a new gif is to be displayed
+- [ ] Deleting a specific gif from the database
 - [ ] Windows support
