@@ -138,9 +138,9 @@ def helpMe():
    print("A: Add multiple gifs (specify a file containing gif pathnames)")
    print("T: Tap a beat and get a gif")
    print("P: Print the database")
-   print("Q: Quit the program")
    print("D: Delete an entry from the database")
    print("H: Help")
+   print("Q: Quit the program")   
 
 def main():
    isWin = (sys.platform == "win32")

@@ -12,9 +12,9 @@ OPTIONS:
 * A: Add multiple gifs (by specifying a file containing gif pathnames)
 * T: Tap a beat and get a gif
 * P: Print the database
-* Q: Quit the program
 * D: Delete an entry from the database
 * H: Help
+* Q: Quit the program
 
 IMPLEMENTED:
 - [X] calculating the length and tempo of a gif on your computer
