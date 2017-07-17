@@ -13,7 +13,8 @@ OPTIONS:
 * T: Tap a beat and get a gif
 * P: Print the database
 * Q: Quit the program
-* D: Delete the entire contents of the database
+* D: Delete an entry from the database
+* H: Help
 
 IMPLEMENTED:
 - [X] calculating the length and tempo of a gif on your computer
@@ -28,7 +29,7 @@ IMPLEMENTED:
 - [X] excluding gifs that are much shorter or longer than the tempo from queries (e.g. a gif of 300 BPM matches a user tapping at 30 BPM, but is too fast to be a satisfying match)
 - [X] displaying the gif
 - [X] Windows support
+- [X] Deleting a specific gif from the database
 
 TO BE IMPLEMENTED:
 - [ ] Closing the displayed gif when a new gif is to be displayed
-- [ ] Deleting a specific gif from the database

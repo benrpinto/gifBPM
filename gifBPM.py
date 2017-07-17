@@ -63,16 +63,10 @@ def processImage(path, connection, cursor):
          im.seek(im.tell()+1)
    except EOFError:
       gifBPM = float(60000)/gifLen
-      print("----")
-      print(fPath)
-      print(fName)
-      print(gifLen)
-      print(gifBPM)
-      print(isURL)
-      print("----")
       toInsert = (fPath, fName, gifLen, gifBPM,isURL)
       cursor.execute('INSERT INTO images (fPath, fName, gifLen, bpm, isURL) VALUES(?,?,?,?,?)', toInsert)
       connection.commit()
+      print("gif successfully added")
 
 def showDB(connection, cursor):
    isWin = (sys.platform == "win32")
@@ -82,9 +76,9 @@ def showDB(connection, cursor):
    result = cursor.fetchall()
    for (image_ID, fPath, fName, gifLen, bpm, isURL) in result:
       if(isWin and not isURL):
-         print("%d: %s\%s %d" % (image_ID, fPath, fName, gifLen))
+         print("%d: %d %s\%s" % (image_ID, gifLen, fPath, fName))
       else:
-         print("%d: %s/%s %d" % (image_ID, fPath, fName, gifLen))
+         print("%d: %d %s/%s %d" % (image_ID, gifLen, fPath, fName))
 
 def getFreq(Connection, cursor):
    isWin = (sys.platform == "win32")
@@ -138,10 +132,22 @@ def showMeTheGif(imagePath):
    else:
       subprocess.call(["sensible-browser", "%s"%imagePath])
    
+def helpMe():
+   print("Options:")
+   print("G: Add a gif")
+   print("A: Add multiple gifs (specify a file containing gif pathnames)")
+   print("T: Tap a beat and get a gif")
+   print("P: Print the database")
+   print("Q: Quit the program")
+   print("D: Delete an entry from the database")
+   print("H: Help")
 
 def main():
+   isWin = (sys.platform == "win32")
+   
    connection = sqlite3.connect("images.db")
    cursor = connection.cursor()
+
    sqlCommand = """
    CREATE TABLE IF NOT EXISTS images (
    Image_ID INTEGER PRIMARY KEY,
@@ -156,16 +162,41 @@ def main():
 
    while True:
       option = raw_input("press g to add gif.\npress t to tap tempo.\npress q to quit.\n")
-      if option in ('g', 'G'):
-         myPath = raw_input("enter path of file\n")
-         print("Opening %s" % (myPath))
-         processImage(myPath, connection, cursor)
-      elif option in ('a', 'A'):
+      if option in ('a', 'A'):
          myPath = raw_input("enter path of file containing filepaths\n")
          print("Opening %s" % (myPath))
          massAdd(myPath, connection, cursor)
-      elif option in ('t', 'T'):
-         getFreq(connection,cursor)
+      elif option in ('d', 'D'):
+         selector = raw_input("Enter id number of entry you wish to delete. Enter ALL to clear database\n")
+         if (selector == "ALL"):
+            optionCheck = raw_input("This will clear database. Are you sure?(Y/N)\n")
+            if(optionCheck in ('y', 'Y', "Yes", "yes", "YES")):
+               cursor.execute("""DELETE FROM images;""")
+               connection.commit()
+               print("Database cleared.")
+         else:
+            toDelete = (selector,)
+            try:
+               cursor.execute('SELECT Image_ID, fPath, fName, isURL FROM images WHERE Image_ID = ?;', toDelete)
+               (image_ID, fPath, fName, isURL) = cursor.fetchone()
+               print("Are you sure you want to delete the following entry?")
+               if(isWin and not isURL):
+                  print("%d: %s\%s" % (image_ID, fPath, fName))
+               else:
+                  print("%d: %s/%s %d" % (image_ID, fPath, fName))                       
+               optionCheck = raw_input()
+               if(optionCheck in ('y', 'Y', "Yes", "yes", "YES")):
+                  cursor.execute('DELETE FROM images WHERE Image_ID = ?;', toDelete)
+                  connection.commit()
+                  print("entry deleted")
+            except TypeError:
+               print("could not find entry %s" % selector)
+      elif option in ('g', 'G'):
+         myPath = raw_input("enter path of file\n")
+         print("Opening %s" % (myPath))
+         processImage(myPath, connection, cursor)
+      elif option in ('h', 'H'):
+         helpMe()
       elif option in ('p', 'P'):
          showDB(connection, cursor)
       elif option in ('q', 'Q'):
@@ -173,20 +204,8 @@ def main():
          connection.close()
          print("goodbye")
          break
-      elif option in ('d', 'D'):
-         optionCheck = raw_input("This will clear database. Are you sure?(Y/N)\n")
-         if(optionCheck in ('y', 'Y', "Yes", "yes", "YES")):
-            cursor.execute("""DROP TABLE images;""")
-            sqlCommand = """
-            CREATE TABLE IF NOT EXISTS images (
-            Image_ID INTEGER PRIMARY KEY,
-            fPath VARCHAR(256),
-            fName VARCHAR(256),
-            gifLen INTEGER,
-            bpm REAL,
-            isURL BOOLEAN);"""
-            cursor.execute(sqlCommand)
-            print("Database cleared.")
+      elif option in ('t', 'T'):
+         getFreq(connection,cursor)
       else:
          print("That is not a valid option")
 
