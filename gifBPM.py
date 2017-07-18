@@ -78,7 +78,7 @@ def showDB(connection, cursor):
       if(isWin and not isURL):
          print("%d: %d %s\%s" % (image_ID, gifLen, fPath, fName))
       else:
-         print("%d: %d %s/%s %d" % (image_ID, gifLen, fPath, fName))
+         print("%d: %d %s/%s" % (image_ID, gifLen, fPath, fName))
 
 def getFreq(Connection, cursor):
    isWin = (sys.platform == "win32")
