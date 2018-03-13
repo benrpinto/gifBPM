@@ -30,6 +30,3 @@ IMPLEMENTED:
 - [X] displaying the gif
 - [X] Windows support
 - [X] Deleting a specific gif from the database
-
-TO BE IMPLEMENTED:
-- [ ] Closing the displayed gif when a new gif is to be displayed
