@@ -2,10 +2,10 @@ import os
 import sys
 import sqlite3
 import subprocess
-import thread
+import _thread
 import requests
-import urlparse
-from StringIO import StringIO
+from urllib.parse import urlparse
+from io import BytesIO
 from time import time
 from PIL import Image
 
@@ -38,15 +38,15 @@ def processImage(path, connection, cursor):
       if(fName == path):
          fPath = os.getcwd()
       isURL = False
-   except IOError as err:
+   except (IOError,FileNotFoundError) as err:
       try:
          response = requests.get(path)
-         im = Image.open(StringIO(response.content))
-         (myScheme, myNetloc, myPath, myParams, myQuery, myFrag) = urlparse.urlparse(path)
+         im = Image.open(BytesIO(response.content))
+         (myScheme, myNetloc, myPath, myParams, myQuery, myFrag) = urlparse(path)
          fName = os.path.basename(myPath)
          fPath = myScheme+ "://" + myNetloc + os.path.dirname(myPath)
          isURL = True
-      except IOError as err:
+      except (IOError, FileNotFoundError) as err:
          print("error opening file")
          return
 
@@ -119,10 +119,10 @@ def getFreq(Connection, cursor):
             (r,a,b,isURL) = cursor.fetchone()
             if(isWin and not isURL):
                print("%s\%s %d" % (r,a,b))
-               thread.start_new_thread(showMeTheGif, (r + '\\' + a,))
+               _thread.start_new_thread(showMeTheGif, (r + '\\' + a,))
             else:
                print("%s/%s %d" % (r,a,b))
-               thread.start_new_thread(showMeTheGif, (r + '/' + a,))
+               _thread.start_new_thread(showMeTheGif, (r + '/' + a,))
          except TypeError:
             print("No suitable gifs in database")
 
@@ -161,15 +161,15 @@ def main():
    connection.commit()
 
    while True:
-      option = raw_input("press g to add gif.\npress t to tap tempo.\npress q to quit.\n")
+      option = input("press g to add gif.\npress t to tap tempo.\npress q to quit.\n")
       if option in ('a', 'A'):
-         myPath = raw_input("enter path of file containing filepaths\n")
+         myPath = input("enter path of file containing filepaths\n")
          print("Opening %s" % (myPath))
          massAdd(myPath, connection, cursor)
       elif option in ('d', 'D'):
-         selector = raw_input("Enter id number of entry you wish to delete. Enter ALL to clear database\n")
+         selector = input("Enter id number of entry you wish to delete. Enter ALL to clear database\n")
          if (selector == "ALL"):
-            optionCheck = raw_input("This will clear database. Are you sure?(Y/N)\n")
+            optionCheck = input("This will clear database. Are you sure?(Y/N)\n")
             if(optionCheck in ('y', 'Y', "Yes", "yes", "YES")):
                cursor.execute("""DELETE FROM images;""")
                connection.commit()
@@ -184,7 +184,7 @@ def main():
                   print("%d: %s\%s" % (image_ID, fPath, fName))
                else:
                   print("%d: %s/%s %d" % (image_ID, fPath, fName))                       
-               optionCheck = raw_input()
+               optionCheck = input()
                if(optionCheck in ('y', 'Y', "Yes", "yes", "YES")):
                   cursor.execute('DELETE FROM images WHERE Image_ID = ?;', toDelete)
                   connection.commit()
@@ -192,7 +192,7 @@ def main():
             except TypeError:
                print("could not find entry %s" % selector)
       elif option in ('g', 'G'):
-         myPath = raw_input("enter path of file\n")
+         myPath = input("enter path of file\n")
          print("Opening %s" % (myPath))
          processImage(myPath, connection, cursor)
       elif option in ('h', 'H'):
