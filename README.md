@@ -22,16 +22,17 @@ Recommended to use venv
 Recommended to use pip to install packages
 List of packages required (from pip list)
 
-Package       Version  
-certifi       2020.6.20
-chardet       3.0.4    
-idna          2.10     
-Pillow        7.2.0    
-pip           20.0.2   
-pkg-resources 0.0.0    
-requests      2.24.0   
-setuptools    44.0.0   
-urllib3       1.25.10 
+| Package       | Version   |
+| ------------- | --------- |
+| certifi       | 2020.6.20 |
+| chardet       | 3.0.4     |
+| idna          | 2.10      |
+| Pillow        | 7.2.0     |
+| pip           | 20.0.2    |
+| pkg-resources | 0.0.0     |
+| requests      | 2.24.0    |
+| setuptools    | 44.0.0    |
+| urllib3       | 1.25.10   |
 
 These can be installed with the following 2 commands
    pip install Pillow
