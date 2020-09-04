@@ -21,8 +21,8 @@ Python3
 Recommended to use venv
 Recommended to use pip to install packages
 List of packages required (from pip list)
+
 Package       Version  
-------------- ---------
 certifi       2020.6.20
 chardet       3.0.4    
 idna          2.10     
