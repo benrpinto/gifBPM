@@ -35,8 +35,8 @@ List of packages required (from pip list)
 | urllib3       | 1.25.10   |
 
 These can be installed with the following 2 commands
-   pip install Pillow
-   pip install requests
+* pip install Pillow
+* pip install requests
 
 IMPLEMENTED:
 - [X] calculating the length and tempo of a gif on your computer
