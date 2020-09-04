@@ -16,10 +16,11 @@ OPTIONS:
 * H: Help
 * Q: Quit the program
 
-Dependencies
-Python3
-Recommended to use venv
-Recommended to use pip to install packages
+Dependencies:
+* Python3
+* Recommended to use venv
+* Recommended to use pip to install packages
+
 List of packages required (from pip list)
 
 | Package       | Version   |
